@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Socket.io Chat</title>
+  <style>
+    ul { list-style-type: none; margin: 0; padding: 0; }
+    li { padding: 8px; margin-bottom: 8px; background: #f4f4f4; }
+    input { padding: 8px; margin-top: 8px; width: calc(100% - 16px); }
+  </style>
+</head>
+<body>
+  <ul id="messages"></ul>
+  <input id="m" autocomplete="off" /><button onclick="sendMessage()">Send</button>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    // Load chat history
+    socket.on('chat history', (msgs) => {
+      const messages = document.getElementById('messages');
+      messages.innerHTML = '';
+      msgs.forEach((msg) => {
+        const item = document.createElement('li');
+        item.textContent = msg;
+        messages.appendChild(item);
+      });
+    });
+
+    // Listen for 'chat message' events from the server
+    socket.on('chat message', (msg) => {
+      const item = document.createElement('li');
+      item.textContent = msg;
+      document.getElementById('messages').appendChild(item);
+      window.scrollTo(0, document.body.scrollHeight);
+    });
+
+    // Function to send a message
+    function sendMessage() {
+      const input = document.getElementById('m');
+      const message = input.value;
+      if (message) {
+        // Emit message through socket
+        socket.emit('chat message', message);
+        // Optionally, send message via API
+        fetch('/api/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ message }),
+        });
+        input.value = '';
+      }
+    }
+  </script>
+</body>
+</html>
